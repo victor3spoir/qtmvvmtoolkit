@@ -1,8 +1,8 @@
 # coding:utf-8
 import typing
-from typing import Callable, Generic, TypeVar, Any
+from typing import Any, Callable, Generic, TypeVar
 
-
+from events import Event
 from qtpy.QtCore import QObject, Signal
 
 FuncT = typing.TypeVar("FuncT", bound=typing.Callable)
@@ -130,4 +130,72 @@ class Messenger:
                 message.register(func)
                 message.send()
                 message.unregister(func)
+        return None
+
+
+# T = typing.TypeVar("T")
+
+
+class MessageV2(typing.Generic[T]):
+    def __init__(self, data: T) -> None:
+        super().__init__()
+        self._data = data
+        self.changed = Event[T]()
+        return
+
+    def register(self, func: typing.Callable[[T], None]):
+        self.changed += func
+        return
+
+    def throw(self) -> None:
+        self.changed(self._data)
+        return
+
+
+class MessengerV2:
+    _default: "MessengerV2" = None  # type:ignore
+
+    @classmethod
+    def Default(cls) -> "MessengerV2":
+        cls._default = cls._default or MessengerV2()
+        return cls._default
+
+    def __init__(self) -> None:
+        self.messages: typing.Dict[
+            str, typing.List[typing.Callable[[typing.Any], None]]
+        ] = {}
+        return
+
+    def register(
+        self,
+        message: typing.Type[MessageV2[T]],
+        func: typing.Callable[[T], None],
+    ) -> None:
+        if message.__name__ not in self.messages:
+            self.messages.update({message.__name__: []})
+        _functions = self.messages.get(message.__name__, [])
+        if func not in _functions:
+            _functions.append(func)
+        self.messages.update({message.__name__: _functions})
+        return None
+
+    def unregister(
+        self,
+        message: typing.Type[MessageV2[T]],
+        func: typing.Callable[[T], None],
+    ) -> None:
+        if message.__name__ not in self.messages:
+            self.messages.update({message.__name__: []})
+        _functions = self.messages.get(message.__name__, [])
+        if func in _functions:
+            _functions.remove(func)
+        self.messages.update({message.__name__: _functions})
+        return None
+
+    def send(self, message: MessageV2[typing.Any]) -> None:
+        if message.__class__.__name__ in self.messages:
+            for function in self.messages.get(message.__class__.__name__, []):
+                message.changed += function
+                message.throw()
+                message.changed -= function
         return None
