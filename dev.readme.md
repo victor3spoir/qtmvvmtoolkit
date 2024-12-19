@@ -3,7 +3,7 @@
 ## How build
 
 ```pwsh
-pyhton -m pdm build
+  uv build
 ```
 
 ## How Deploy
@@ -15,5 +15,5 @@ pyhton -m pdm build
 How Test
 
 ```bash
-  pytest --junit-xml=reports.xml .
+  uv pytest --junit-xml=reports.xml .
 ```

@@ -58,13 +58,13 @@ class BindableObject(QObject):
         prop: typing.Literal["visibility", "state", "readonly"],
     ) -> None:
         if prop == "visibility":
-            observable.valueChanged.connect(widget.setVisible)
+            observable.valueChanged += lambda v: widget.setVisible(bool(v))
         if prop == "state":
-            observable.valueChanged.connect(widget.setEnabled)
+            observable.valueChanged += lambda v: widget.setEnabled(bool(v))
         if prop == "readonly":
             if hasattr(widget, "setReadOnly"):
                 observable.valueChanged.connect(widget.setReadOnly)
-        observable.valueChanged.emit(observable.get())
+        observable.valueChanged(observable.get())
         return None
 
     def binding_value(
@@ -164,15 +164,15 @@ class BindableObject(QObject):
         widget.setMaxVisibleItems(visibles_items)
         widget.clear()
 
-        observable.valueChanged.connect(widget.clear)
-        observable.valueChanged.connect(
-            lambda values: self._fill_combobox_items(widget, values, display_name)
+        observable.valueChanged += lambda v: widget.clear()
+        observable.valueChanged += lambda values: self._fill_combobox_items(
+            widget, values, display_name
         )
         if selection_default:
-            observable.valueChanged.emit(observable.collection)
+            observable.valueChanged(observable.collection)
             # widget.setCurrentIndex(0)
         else:
-            observable.valueChanged.emit(observable.collection)
+            observable.valueChanged(observable.collection)
             widget.setCurrentIndex(-1)
 
         if observable_value:
@@ -274,14 +274,14 @@ class BindableObject(QObject):
 
         if string_format:
             widget.setReadOnly(True)
-            observable.valueChanged.connect(
-                lambda value: widget.setText(string_format.format(value))
+            observable.valueChanged += lambda value: widget.setText(
+                string_format.format(value)
             )
-            observable.valueChanged.emit(observable.get())
+            observable.valueChanged(observable.get())
             return
 
-        observable.valueChanged.connect(lambda value: widget.setText(str(value)))
-        observable.valueChanged.emit(observable.get())
+        observable.valueChanged += lambda value: widget.setText(str(value))
+        observable.valueChanged(observable.get())
         return None
 
     def _binding_label(
@@ -293,13 +293,13 @@ class BindableObject(QObject):
         # _type: typing.Type = observable.__orig_class__.__args__[0]
 
         if string_format:
-            observable.valueChanged.connect(
-                lambda value: widget.setText(string_format.format(value))
+            observable.valueChanged += lambda value: widget.setText(
+                string_format.format(value)
             )
-            observable.valueChanged.emit(observable.get())
+            observable.valueChanged(observable.get())
             return
-        observable.valueChanged.connect(lambda value: widget.setText(str(value)))
-        observable.valueChanged.emit(observable.get())
+        observable.valueChanged += lambda value: widget.setText(str(value))
+        observable.valueChanged(observable.get())
 
         return None
 
@@ -315,16 +315,14 @@ class BindableObject(QObject):
         use_percentage: bool | None = None,
     ) -> None:
         if use_percentage:
-            observable.valueChanged.connect(
-                lambda value: widget.setValue(int(value * 100))
-            )
+            observable.valueChanged += lambda value: widget.setValue(int(value * 100))
             widget.valueChanged.connect(lambda value: observable.set(int(value / 100)))
-            observable.valueChanged.emit(observable.get())
+            observable.valueChanged(observable.get())
             return None
 
-        observable.valueChanged.connect(widget.setValue)
+        observable.valueChanged += lambda v: widget.setValue(v)
         widget.valueChanged.connect(observable.set)
-        observable.valueChanged.emit(observable.get())
+        observable.valueChanged(observable.get())
         return None
 
     def _binding_doublespinbox(
@@ -338,14 +336,14 @@ class BindableObject(QObject):
         use_percentage: bool | None = None,
     ) -> None:
         if use_percentage:
-            observable.valueChanged.connect(lambda value: widget.setValue(value * 100))
+            observable.valueChanged += lambda value: widget.setValue(value * 100)
             widget.valueChanged.connect(lambda value: observable.set(value / 100))
-            observable.valueChanged.emit(observable.get())
+            observable.valueChanged(observable.get())
             return None
 
-        observable.valueChanged.connect(widget.setValue)
-        widget.valueChanged.connect(observable.set)
-        observable.valueChanged.emit(observable.get())
+        observable.valueChanged += lambda v: widget.setValue(v)
+        widget.valueChanged.connect(lambda v: observable.set(v))
+        observable.valueChanged(observable.get())
         return None
 
     # QCheckBox
@@ -371,11 +369,11 @@ class BindableObject(QObject):
                 observable.set(False)
             return None
 
-        observable.valueChanged.connect(widget.setChecked)
+        observable.valueChanged += lambda v: widget.setChecked(bool(v))
         widget.stateChanged.connect(
             lambda: __handle_checkbox_binding(widget, observable)
         )
-        observable.valueChanged.emit(observable.get())
+        observable.valueChanged(observable.get())
         return None
 
     # Depracated function
@@ -391,9 +389,9 @@ class BindableObject(QObject):
         warnings.warn("WARN: Deprecated features (use binding_combobox insted)")
         widget.setDuplicatesEnabled(False)
         widget.setMaxVisibleItems(max_visible_items)
-        observable.valueChanged.connect(widget.clear)
-        observable.valueChanged.connect(
-            lambda values: self._fill_combobox_items(widget, values)
+        observable.valueChanged += lambda v: widget.clear()
+        observable.valueChanged += lambda values: self._fill_combobox_items(
+            widget, values
         )
         if select_default:
             observable.valueChanged.emit(observable.collection)

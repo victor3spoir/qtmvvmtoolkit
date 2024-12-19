@@ -3,17 +3,14 @@ import random
 import string
 
 from messages.hellomessage import HelloMessage, StateChangedMessage
-
+from pydantic import BaseModel
 from qtmvvmtoolkit.commands import rcommand
 from qtmvvmtoolkit.inputs import (
     ComputedObservableProperty,
     ObservableCollection,
     ObservableProperty,
 )
-from qtmvvmtoolkit.messenger import Messenger
-
-
-from pydantic import BaseModel
+from qtmvvmtoolkit.messenger import Messenger, MessengerV2
 
 
 class User(BaseModel):
@@ -35,9 +32,11 @@ class HomeViewModel:
         self.state = ObservableProperty[bool](False)
 
         self.username = ObservableProperty[str]("named")
+        # self.username = ObsProperty[str]("named")
+        # self.voltage = ObsProperty[int](48)
+        self.voltage = ObservableProperty[int](48)
         self.counter = ObservableProperty[int](0)
         self.user = ObservableProperty[User](User(name="", email=""))
-        self.voltage = ObservableProperty[int](48)
         self.capacity = ObservableProperty[float](100)
         self.energy = ComputedObservableProperty[float](
             self.compute_energy(), [self.voltage, self.capacity], self.compute_energy
@@ -53,8 +52,8 @@ class HomeViewModel:
             self.command_test_new_command
         )
 
-        Messenger.Default.register(HelloMessage)
-        Messenger.Default.register(StateChangedMessage)
+        MessengerV2.Default().register(HelloMessage, lambda v: print(v))
+        MessengerV2.Default().register(StateChangedMessage, lambda v: print(v))
         return
 
     def update_valid_numbers(self) -> bool:
@@ -66,7 +65,7 @@ class HomeViewModel:
 
     def command_call_relay(self):
         # self.changed.call()
-        Messenger.Default.send(StateChangedMessage(True))
+        MessengerV2.Default().send(StateChangedMessage(True))
 
         # self.hide.set(not self.hide.get())
         return None
@@ -83,7 +82,7 @@ class HomeViewModel:
             print(f":::still working ....{_}")
 
     def fill_numbers(self) -> None:
-        Messenger.Default.send(HelloMessage("new message sent"))
+        MessengerV2.Default().send(HelloMessage("new message sent"))
         new_name = "".join(random.choices(list(string.ascii_letters), k=10))
         self.infos.append(new_name)
         if len(self.numbers.get()) != 0:
