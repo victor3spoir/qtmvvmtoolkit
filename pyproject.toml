@@ -4,8 +4,12 @@ authors = [{ name = "victor3spoir", email = "victorespoir.dev@email.com" }]
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.10"
-# license = { file = "LICENCE" }
-classifiers = ["Programming Language :: Python :: 3"]
+license = { file = "LICENCE" }
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
 
 dependencies = [
     "cs-events>=0.5.0",
@@ -15,6 +19,11 @@ dependencies = [
     "qtpy>=2.4.2",
 ]
 dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/victor3spoir/qtmvvmtoolkit"
+Repository  = "https://github.com/victor3spoir/qtmvvmtoolkit"
+Issues = "https://github.com/victor3spoir/qtmvvmtoolkit/issues"
 
 
 [build-system]
