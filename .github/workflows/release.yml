@@ -22,6 +22,23 @@ jobs:
       tag_name: ${{ steps.release.outputs.tag_name}}
     steps:
       - run: echo "Testing"
+      - name: Check for tag details
+        id: release
+        run: |
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            TAG_NAME=${GITHUB_REF#refs/tags/}
+            NEW_VERSION=$(echo $TAG_NAME | awk -F'-' '{print $1}')
+            SUFFIX=$(echo $TAG_NAME | grep -oP '[a-z]+[0-9]+' || echo "")
+            echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+            echo "suffix=$SUFFIX" >> "$GITHUB_OUTPUT"
+            echo "tag_name=$TAG_NAME" >> "$GITHUB_OUTPUT"
+            echo "Version is $NEW_VERSION"
+            echo "Suffix is $SUFFIX"
+            echo "Tag name is $TAG_NAME"
+          else
+            echo "No tag found"
+            exit 1
+          fi
   check_pypi:
     runs-on: ubuntu-22.04
     needs:
@@ -51,9 +68,9 @@ jobs:
   deploy_pypi:
     runs-on: ubuntu-22.04
     needs: [build_deploy]
-    environment: 
+    environment:
       name: release
-    permissions: 
+    permissions:
       id-token: write
     steps:
       - uses: actions/download-artifact@v3
@@ -61,12 +78,12 @@ jobs:
           name: dist
           path: dist/
       - uses: pypa/gh-action-pypi-publish@release/v1
-  
+
   github_release:
     name: Github Release
     runs-on: ubuntu-22.04
     needs: [details, build_deploy]
-    permissions: 
+    permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
@@ -77,7 +94,7 @@ jobs:
           name: dist
           path: dist/
       - name: Create Release
-        id: create_release 
+        id: create_release
         env:
           GH_TOKEN: ${{github.token}}
         run: gh release ${{needs.details.outputs.tag_name}} dist/* --title ${{needs.details.outputs.tag_name}} --generate-notes
