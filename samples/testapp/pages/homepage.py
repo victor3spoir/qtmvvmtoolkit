@@ -73,6 +73,15 @@ class PageHome(QWidget, BindableObject):
 
     def initialize_binding(self) -> None:
         self.binding_value(self.labelName, self.vm.username)
+        # self.vm.username.binding(self.entryName.setText)
+        # self.vm.username.binding(self.labelName.setText)
+        # self.vm.username.rbinding(self.entryName.textChanged)
+        # self.vm.username.binding(lambda v: print(f"==>{v}"))
+        self.binding_value(self.spinVoltage, self.vm.voltage, use_percentage=True)
+        self.vm.voltage.binding(self.spinVoltage.setValue)
+        # self.vm.voltage.rbinding(self.spinVoltage.valueChanged)
+        # self.vm.voltage.binding(lambda v: print(f"value===>{v}"))
+
         converter = ToStrConverter(str, str)
         converter.convert(8)
         self.binding_value(self.entryName, self.vm.username)
@@ -83,14 +92,10 @@ class PageHome(QWidget, BindableObject):
         )
         self.binding_state(self.spinVoltage, self.vm.hide, prop="visibility")
         self.binding_value(self.spinCapacity, self.vm.capacity)
-        self.binding_value(self.spinEnergy, self.vm.energy)
+        # self.binding_value(self.spinEnergy, self.vm.energy)
         self.binding_command(self.buttonCall, RelayCommand(self.display_information))
         self.binding_command(self.buttonNewCommand, self.vm.command_test_new_command)
-        # self.binding_rcommand(self.buttonNewCommand, self.vm.inner_new_command)
-        # self.binding_combobox(
-        #     self.cboxNames, self.vm.user_infos, False, display_name="infos"
-        # )
-        # self.binding_combobox_selection(self.cboxNames, self.vm.user)
+
         self.binding_selection(
             self.cboxNames,
             self.vm.user_infos,
