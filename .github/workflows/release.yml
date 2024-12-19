@@ -36,7 +36,7 @@ jobs:
             echo "Suffix is $SUFFIX"
             echo "Tag name is $TAG_NAME"
           else
-            echo "No tag found"
+            echo "No new tag found"
             exit 1
           fi
   check_pypi:
