@@ -4,8 +4,9 @@ authors = [{ name = "victor3spoir", email = "victorespoir.dev@email.com" }]
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.10"
-license = { file = "LICENCE" }
+# license = { file = "LICENCE" }
 classifiers = ["Programming Language :: Python :: 3"]
+
 dependencies = [
     "cs-events>=0.5.0",
     "loguru>=0.7.3",
@@ -20,6 +21,9 @@ dynamic = ["version"]
 requires = ["setuptools>=42", "setuptools_scm"]
 build-backend = "setuptools.build_meta"
 
+
+[tool.setuptools]
+license-files = ["LICENCE"]
 
 [tool.setuptools_scm]
 version_scheme = "post-release"
