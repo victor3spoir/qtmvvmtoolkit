@@ -11,6 +11,7 @@ requires-python = ">=3.10"
 license = { file = "LICENCE" }
 classifiers = ["Programming Language :: Python :: 3"]
 dependencies = [
+    "cs-events>=0.5.0",
     "loguru>=0.7.3",
     "pyqt6>=6.8.0",
     "pyqtdarktheme>=2.1.0",

@@ -84,6 +84,18 @@ toml = [
 ]
 
 [[package]]
+name = "cs-events"
+version = "0.5.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "typing-extensions", marker = "python_full_version < '3.12'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/c6/06/b0c092039e877f85a4db8e6524a17a5fa426f03fc3370d52990a913c6020/cs_events-0.5.0.tar.gz", hash = "sha256:ba9183ccda2e7c22e8556fa6185f449085e9ba75ab444b0115c9539b341bdc34", size = 12184 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ae/10/136d9eaa4e465bef83edd166fa53ddf02211e2f6dcea7be9a49c25da6a25/cs_events-0.5.0-py3-none-any.whl", hash = "sha256:851bb8a4c3adf4841622ae561d40e7098ee82c86fedc3b235157a007228714ef", size = 12467 },
+]
+
+[[package]]
 name = "darkdetect"
 version = "0.7.1"
 source = { registry = "https://pypi.org/simple" }
@@ -331,9 +343,10 @@ wheels = [
 
 [[package]]
 name = "qtmvvmtoolkit"
-version = "1.7.6.dev61+gc88b424.d20241219"
+version = "1.7.6.dev62+gdfffd42.d20241219"
 source = { editable = "." }
 dependencies = [
+    { name = "cs-events" },
     { name = "loguru" },
     { name = "pyqt6" },
     { name = "pyqtdarktheme" },
@@ -350,6 +363,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "cs-events", specifier = ">=0.5.0" },
     { name = "loguru", specifier = ">=0.7.3" },
     { name = "pyqt6", specifier = ">=6.8.0" },
     { name = "pyqtdarktheme", specifier = ">=2.1.0" },
