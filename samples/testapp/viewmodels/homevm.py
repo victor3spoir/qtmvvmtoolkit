@@ -32,9 +32,11 @@ class HomeViewModel:
         self.state = ObservableProperty[bool](False)
 
         self.username = ObservableProperty[str]("named")
+        # self.username = ObsProperty[str]("named")
+        # self.voltage = ObsProperty[int](48)
+        self.voltage = ObservableProperty[int](48)
         self.counter = ObservableProperty[int](0)
         self.user = ObservableProperty[User](User(name="", email=""))
-        self.voltage = ObservableProperty[int](48)
         self.capacity = ObservableProperty[float](100)
         self.energy = ComputedObservableProperty[float](
             self.compute_energy(), [self.voltage, self.capacity], self.compute_energy
