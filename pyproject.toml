@@ -27,15 +27,17 @@ Issues = "https://github.com/victor3spoir/qtmvvmtoolkit/issues"
 
 
 [build-system]
-requires = ["setuptools>=42", "setuptools_scm"]
+requires = ["setuptools>=64", "setuptools-scm>=8"]
 build-backend = "setuptools.build_meta"
 
 
 [tool.setuptools]
 license-files = ["LICENCE"]
 
+
 [tool.setuptools_scm]
-version_scheme = "post-release"
+version_scheme = "release"
+local_scheme = "release"
 
 
 [dependency-groups]
@@ -45,4 +47,6 @@ dev = [
     "ruff>=0.8.3",
     "pydantic>=2.10.4",
     "twine>=6.0.1",
+    "setuptools>=75.6.0",
+    "setuptools-scm>=8.1.0",
 ]
