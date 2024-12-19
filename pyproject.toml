@@ -1,44 +1,33 @@
-# [build-system]
-# requires = ["setuptools", "setuptools-scm"]
-# build-backend = "setuptools.build_meta"
-
-
-
-[build-system] 
-requires = ["pdm-backend"] 
+[build-system]
+requires = ["pdm-backend"]
 build-backend = "pdm.backend"
 
 [project]
 name = "qtmvvmtoolkit"
-authors = [
-    {name = "kvruntime", email = "kvruntime@email.com"},
-]
-description = "Description here..."
+authors = [{ name = "victor3spoir", email = "victorespoir.dev@email.com" }]
+description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.7"
-# keywords = ["one", "two"]
-license = {file = "LICENCE"}
-
-classifiers = [
-    "Framework :: Django",
-    "Programming Language :: Python :: 3",
-]
+requires-python = ">=3.10"
+license = { file = "LICENCE" }
+classifiers = ["Programming Language :: Python :: 3"]
 dependencies = [
-    "pyqtdarktheme",
-    'importlib-metadata; python_version<"3.8"',
-    "pyqt6",
-    "qtpy"
+    "loguru>=0.7.3",
+    "pyqt6>=6.8.0",
+    "pyqtdarktheme>=2.1.0",
+    "qtpy>=2.4.2",
 ]
 dynamic = ["version"]
-
 [tool.setuptools.packages.find]
 namespaces = true
-where=["src"]
+where = ["src"]
 
-# [tool.setuptools_scm]
-# version_scheme="post-release"
 [tool.pdm.version]
 source = "scm"
 
-
-
+[dependency-groups]
+dev = [
+    "pytest-cov>=6.0.0",
+    "pytest>=8.3.4",
+    "ruff>=0.8.3",
+    "pydantic>=2.10.4",
+]
