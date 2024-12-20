@@ -36,7 +36,7 @@ jobs:
             echo "Suffix is $SUFFIX"
             echo "Tag name is $TAG_NAME"
           else
-            echo "No tag found"
+            echo "No new tag found"
             exit 1
           fi
   check_pypi:
@@ -65,19 +65,19 @@ jobs:
           name: dist
           path: dist/
 
-  deploy_pypi:
-    runs-on: ubuntu-22.04
-    needs: [build_deploy]
-    environment:
-      name: release
-    permissions:
-      id-token: write
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist/
-      - uses: pypa/gh-action-pypi-publish@release/v1
+  # deploy_pypi:
+  #   runs-on: ubuntu-22.04
+  #   needs: [build_deploy]
+  #   environment:
+  #     name: release
+  #   permissions:
+  #     id-token: write
+  #   steps:
+  #     - uses: actions/download-artifact@v4
+  #       with:
+  #         name: dist
+  #         path: dist/
+  #     - uses: pypa/gh-action-pypi-publish@release/v1
 
   github_release:
     name: Github Release
@@ -97,4 +97,4 @@ jobs:
         id: create_release
         env:
           GH_TOKEN: ${{github.token}}
-        run: gh release ${{needs.details.outputs.tag_name}} dist/* --title ${{needs.details.outputs.tag_name}} --generate-notes
+        run: gh release create ${{needs.details.outputs.tag_name}} dist/* --title ${{needs.details.outputs.tag_name}} --generate-notes

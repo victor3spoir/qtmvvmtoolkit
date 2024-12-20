@@ -22,20 +22,25 @@ dynamic = ["version"]
 
 [project.urls]
 Homepage = "https://github.com/victor3spoir/qtmvvmtoolkit"
-Repository  = "https://github.com/victor3spoir/qtmvvmtoolkit"
+Repository = "https://github.com/victor3spoir/qtmvvmtoolkit"
 Issues = "https://github.com/victor3spoir/qtmvvmtoolkit/issues"
 
 
+# [build-system]
+# requires = ["setuptools>=64", "setuptools-scm>=8"]
+# build-backend = "setuptools.build_meta"
 [build-system]
-requires = ["setuptools>=42", "setuptools_scm"]
-build-backend = "setuptools.build_meta"
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
 
 
 [tool.setuptools]
 license-files = ["LICENCE"]
 
-[tool.setuptools_scm]
-version_scheme = "post-release"
+
+[tool.pdm.version]
+source = "scm"
+fallback_version = "0.0.1"
 
 
 [dependency-groups]
@@ -45,4 +50,6 @@ dev = [
     "ruff>=0.8.3",
     "pydantic>=2.10.4",
     "twine>=6.0.1",
+    "setuptools>=75.6.0",
+    "setuptools-scm>=8.1.0",
 ]
