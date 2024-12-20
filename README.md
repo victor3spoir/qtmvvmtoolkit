@@ -27,7 +27,7 @@
 You can install QtMvvmToolkit using pip:
 
 ```bash
-  pip install git+https://github.com/kvruntime/qtmvvmtoolkit.git@branch-or-tag-name
+  pip install git+https://github.com/victor3spoir/qtmvvmtoolkit.git@branch-or-tag-name
 ```
 
 ## Getting Started

@@ -1,0 +1,100 @@
+name: Release Package
+on:
+  push:
+    branches:
+      - main
+      - dev
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+      - '[0-9]+.[0-9]+.[0-9]+a[0-9]'
+      - '[0-9]+.[0-9]+.[0-9]+b[0-9]'
+      - '[0-9]+.[0-9]+.[0-9]+rc[0-9]'
+env:
+  PACKAGE_NAME: 'qtmvvmtoolkit'
+  OWNER: 'victor3spoir'
+
+jobs:
+  details:
+    runs-on: ubuntu-22.04
+    outputs:
+      new_version: ${{ steps.release.outputs.new_version}}
+      suffix: ${{ steps.release.outputs.suffix}}
+      tag_name: ${{ steps.release.outputs.tag_name}}
+    steps:
+      - run: echo "Testing"
+      - name: Check for tag details
+        id: release
+        run: |
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            TAG_NAME=${GITHUB_REF#refs/tags/}
+            NEW_VERSION=$(echo $TAG_NAME | awk -F'-' '{print $1}')
+            SUFFIX=$(echo $TAG_NAME | grep -oP '[a-z]+[0-9]+' || echo "")
+            echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+            echo "suffix=$SUFFIX" >> "$GITHUB_OUTPUT"
+            echo "tag_name=$TAG_NAME" >> "$GITHUB_OUTPUT"
+            echo "Version is $NEW_VERSION"
+            echo "Suffix is $SUFFIX"
+            echo "Tag name is $TAG_NAME"
+          else
+            echo "No new tag found"
+            exit 1
+          fi
+  check_pypi:
+    runs-on: ubuntu-22.04
+    needs:
+      - details
+    steps:
+      - run: echo "Checking Pypi"
+
+  build_deploy:
+    runs-on: ubuntu-22.04
+    needs:
+      - details
+      - check_pypi
+    steps:
+      - run: echo "Testing code..."
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync
+      - run: uv build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  # deploy_pypi:
+  #   runs-on: ubuntu-22.04
+  #   needs: [build_deploy]
+  #   environment:
+  #     name: release
+  #   permissions:
+  #     id-token: write
+  #   steps:
+  #     - uses: actions/download-artifact@v4
+  #       with:
+  #         name: dist
+  #         path: dist/
+  #     - uses: pypa/gh-action-pypi-publish@release/v1
+
+  github_release:
+    name: Github Release
+    runs-on: ubuntu-22.04
+    needs: [details, build_deploy]
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - name: Create Release
+        id: create_release
+        env:
+          GH_TOKEN: ${{github.token}}
+        run: gh release create ${{needs.details.outputs.tag_name}} dist/* --title ${{needs.details.outputs.tag_name}} --generate-notes
