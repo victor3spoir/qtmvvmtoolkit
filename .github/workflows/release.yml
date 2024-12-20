@@ -65,19 +65,19 @@ jobs:
           name: dist
           path: dist/
 
-  deploy_pypi:
-    runs-on: ubuntu-22.04
-    needs: [build_deploy]
-    environment:
-      name: release
-    permissions:
-      id-token: write
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist/
-      - uses: pypa/gh-action-pypi-publish@release/v1
+  # deploy_pypi:
+  #   runs-on: ubuntu-22.04
+  #   needs: [build_deploy]
+  #   environment:
+  #     name: release
+  #   permissions:
+  #     id-token: write
+  #   steps:
+  #     - uses: actions/download-artifact@v4
+  #       with:
+  #         name: dist
+  #         path: dist/
+  #     - uses: pypa/gh-action-pypi-publish@release/v1
 
   github_release:
     name: Github Release

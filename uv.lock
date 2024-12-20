@@ -690,7 +690,7 @@ wheels = [
 
 [[package]]
 name = "qtmvvmtoolkit"
-version = "0.0.1a4.dev0+gddb0254.d20241219"
+version = "0.0.1a4+d20241219"
 source = { editable = "." }
 dependencies = [
     { name = "cs-events" },
