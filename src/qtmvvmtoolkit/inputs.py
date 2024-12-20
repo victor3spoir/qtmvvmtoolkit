@@ -7,8 +7,9 @@ import warnings
 from loguru import logger
 from qtpy.QtCore import Signal
 from qtpy.QtWidgets import QComboBox
-from events import Event
-
+from events import Event, events, EventHandler
+import dataclasses
+import typing
 
 _T = TypeVar("_T")
 T = TypeVar("T")
@@ -184,3 +185,33 @@ def observable_object(target_class: typing.Type[IObservableObject]):
         return instance
 
     return wrapper
+
+
+@dataclasses.dataclass
+class ObservableClass:
+    _value_changed: Event[str, object] = Event[str, object]()
+
+    def bind(self, handler: typing.Callable[[str, object], None]):
+        self._value_changed += handler
+        return None
+
+    def rbind(self, event: Event[str, object]):
+        event += self._apply_reverse_changes
+        return None
+
+    def _apply_reverse_changes(self, name: str, value: typing.Any) -> None:
+        if name in [field.name for field in dataclasses.fields(self)]:
+            if isinstance(value, type(getattr(self, name))):
+                setattr(self, name, value)
+                pass
+            else:
+                print(f"Incompatible type provided for {name}")
+            pass
+        return None
+
+    def __setattr__(self, name: str, value: typing.Any) -> None:
+        if not isinstance(getattr(self, name, None), (Event)):
+            super().__setattr__(name, value)
+            self._value_changed(name, value)
+            return
+        return

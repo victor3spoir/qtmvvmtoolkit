@@ -1,10 +1,11 @@
 # coding:utf-8
 
 
+import dataclasses
 from typing import Any, Dict
 from pydantic import BaseModel
 from qtmvvmtoolkit.commands import rcommand
-from qtmvvmtoolkit.inputs import observable_object, IObservableObject
+from qtmvvmtoolkit.inputs import ObservableClass, observable_object, IObservableObject
 
 
 @observable_object
@@ -19,6 +20,12 @@ class User(IObservableObject):
 class CUser(IObservableObject):
     name: str = "vik"
     age: int = 3
+
+
+@dataclasses.dataclass
+class ObsUser(ObservableClass):
+    name: str = "viktor"
+    age: int = 26
 
 
 class UserInfo(BaseModel, IObservableObject):
@@ -38,7 +45,8 @@ class UserInfoState(BaseModel, IObservableObject):
 class UserViewModel:
     def __init__(self):
         super().__init__()
-        self.user = UserInfoState()
+        # self.user = UserInfoState()
+        self.user = ObsUser()
         # Messenger.Default.use(HelloMessage, self.command_handle_message)
         self.user.set_attribute(dict(age=33))
         return
