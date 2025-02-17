@@ -22,6 +22,7 @@ from qtpy.QtWidgets import (
 )
 
 from qtmvvmtoolkit.commands import RCommand, RelayCommand
+from qtmvvmtoolkit.converters import IValueConverter
 from qtmvvmtoolkit.inputs import (
     ComputedObservableProperty,
     ObservableCollection,
@@ -31,13 +32,25 @@ from qtmvvmtoolkit.inputs import (
 T = typing.TypeVar("T")
 
 
-class BindableObject(QObject):
+class BindableObject:
+    def initialize_components(self) -> None:
+        raise NotImplementedError(
+            "Please, redefine this function, and call it in the init"
+        )
+
+    def initialize_bindings(self) -> None:
+        raise NotImplementedError(
+            "Please, redefine this function, and call it in the init"
+        )
+
+
+class QtBindableObject(QObject, BindableObject):
     def __init__(
         self,
         parent: typing.Optional[QWidget] = None,
     ) -> None:
         super().__init__(parent)
-        return
+        ...
 
     def initialize_components(self) -> None:
         raise NotImplementedError(
@@ -67,40 +80,40 @@ class BindableObject(QObject):
         observable.valueChanged(observable.get())
         return None
 
-    def binding_value(
-        self,
-        widget: QWidget,
-        observable: typing.Union[ObservableProperty[T], ComputedObservableProperty[T]],
-        *,
-        string_format: typing.Optional[str] = None,
-        mode: typing.Literal["1-way", "2-way"] = "2-way",
-        bindings: typing.Literal["on-typing", "on-typed"] = "on-typed",
-        use_percentage: bool | None = None,
-    ) -> None:
-        # use percentage is only reserved for qspinbox & qdoublespinbox
-        # NOTE: this is about to know the type of observable
-        # _type: type = typing.get_args(observable.__orig_class__)[0]
+    # def binding_value(
+    #     self,
+    #     widget: QWidget,
+    #     observable: typing.Union[ObservableProperty[T], ComputedObservableProperty[T]],
+    #     *,
+    #     string_format: typing.Optional[str] = None,
+    #     mode: typing.Literal["1-way", "2-way"] = "2-way",
+    #     bindings: typing.Literal["on-typing", "on-typed"] = "on-typed",
+    #     use_percentage: bool | None = None,
+    # ) -> None:
+    #     # use percentage is only reserved for qspinbox & qdoublespinbox
+    #     # NOTE: this is about to know the type of observable
+    #     # _type: type = typing.get_args(observable.__orig_class__)[0]
 
-        match widget:
-            case QLineEdit():
-                self._binding_lineedit(widget, observable, bindings=bindings)
-            case QLabel():
-                self._binding_label(widget, observable, string_format)
-            case QSpinBox():
-                self._binding_spinbox(widget, observable, use_percentage)
-            case QDoubleSpinBox():
-                self._binding_doublespinbox(widget, observable, use_percentage)
-            case QCheckBox():
-                self._binding_checkbox(widget, observable)
-            case QTextEdit():
-                print("Not available")
-            case QDateEdit():
-                print("Not available")
-            case QDateTimeEdit():
-                print("Not available")
-            case _:
-                raise Exception("unhandled case.")
-        return None
+    #     match widget:
+    #         case QLineEdit():
+    #             self.binding_lineedit(widget, observable, bindings=bindings)
+    #         case QLabel():
+    #             self.binding_label(widget, observable, string_format)
+    #         case QSpinBox():
+    #             self.binding_spinbox(widget, observable, use_percentage)
+    #         case QDoubleSpinBox():
+    #             self.binding_doublespinbox(widget, observable, use_percentage)
+    #         case QCheckBox():
+    #             self.binding_checkbox(widget, observable)
+    #         case QTextEdit():
+    #             print("Not available")
+    #         case QDateEdit():
+    #             print("Not available")
+    #         case QDateTimeEdit():
+    #             print("Not available")
+    #         case _:
+    #             raise Exception("unhandled case.")
+    #     return None
 
     # def binding_relayable(
     #     self,
@@ -226,8 +239,7 @@ class BindableObject(QObject):
             widget.setCurrentIndex(-1)
         return None
 
-    # Input widgets
-    def _binding_lineedit(
+    def binding_lineedit(
         self,
         widget: QLineEdit,
         observable: typing.Union[ObservableProperty[T], ComputedObservableProperty[T]],
@@ -284,17 +296,18 @@ class BindableObject(QObject):
         observable.valueChanged(observable.get())
         return None
 
-    def _binding_label(
+    def binding_label(
         self,
         widget: QLabel,
         observable: typing.Union[ObservableProperty[T], ComputedObservableProperty[T]],
         string_format: str | None = None,
+        converter: IValueConverter[T, typing.Any] | None = None,
     ) -> None:
         # _type: typing.Type = observable.__orig_class__.__args__[0]
 
-        if string_format:
+        if converter:
             observable.valueChanged += lambda value: widget.setText(
-                string_format.format(value)
+                converter.convert(value)
             )
             observable.valueChanged(observable.get())
             return
@@ -303,21 +316,23 @@ class BindableObject(QObject):
 
         return None
 
-    # SpinBox
-    def _binding_spinbox(
+    def binding_spinbox(
         self,
         widget: QSpinBox,
         observable: typing.Union[
             ObservableProperty[int],
             ComputedObservableProperty[int],
         ],
-        # transformer: typing.Optional[typing.Literal["percent"]] = None,
-        use_percentage: bool | None = None,
+        converter: IValueConverter[int, int] | None = None,
     ) -> None:
-        if use_percentage:
-            observable.valueChanged += lambda value: widget.setValue(int(value * 100))
-            widget.valueChanged.connect(lambda value: observable.set(int(value / 100)))
-            observable.valueChanged(observable.get())
+        if converter:
+            observable.valueChanged += lambda value: widget.setValue(
+                converter.convert(value)
+            )
+            widget.valueChanged.connect(
+                lambda value: observable.set(converter.back_convert(value))
+            )
+            # observable.valueChanged(observable.get())
             return None
 
         observable.valueChanged += lambda v: widget.setValue(v)
@@ -325,7 +340,7 @@ class BindableObject(QObject):
         observable.valueChanged(observable.get())
         return None
 
-    def _binding_doublespinbox(
+    def binding_doublespinbox(
         self,
         widget: QDoubleSpinBox,
         observable: typing.Union[
@@ -334,20 +349,29 @@ class BindableObject(QObject):
         ],
         # transformer: typing.Optional[typing.Literal["percent"]] = None,
         use_percentage: bool | None = None,
+        converter: IValueConverter[typing.Any, typing.Any] | None = None,
     ) -> None:
-        if use_percentage:
-            observable.valueChanged += lambda value: widget.setValue(value * 100)
-            widget.valueChanged.connect(lambda value: observable.set(value / 100))
-            observable.valueChanged(observable.get())
+        if converter:
+            # observable.valueChanged += lambda value: widget.setValue(
+            #     converter.convert(value)
+            # )
+            # widget.valueChanged.connect(
+            #     lambda value: observable.set(converter.back_convert(value))
+            # )
+            # observable.valueChanged(observable.get())
             return None
+        # if use_percentage:
+        #     observable.valueChanged += lambda value: widget.setValue(value * 100)
+        #     widget.valueChanged.connect(lambda value: observable.set(value / 100))
+        #     observable.valueChanged(observable.get())
+        #     return None
 
         observable.valueChanged += lambda v: widget.setValue(v)
         widget.valueChanged.connect(lambda v: observable.set(v))
         observable.valueChanged(observable.get())
         return None
 
-    # QCheckBox
-    def _binding_checkbox(
+    def binding_checkbox(
         self,
         widget: QCheckBox,
         observable: typing.Union[

@@ -1,13 +1,37 @@
 # coding:utf-8
 from qtmvvmtoolkit.commands import RelayCommand
-from qtmvvmtoolkit.converters import ToStrConverter
-from qtmvvmtoolkit.objects import BindableObject
+from qtmvvmtoolkit.converters import IValueConverter
+from qtmvvmtoolkit.objects import QtBindableObject
 from qtpy.QtGui import *
 from qtpy.QtWidgets import *
 from viewmodels.homevm import HomeViewModel
 
 
-class PageHome(QWidget, BindableObject):
+class PercentageConverter(IValueConverter[float, float]):
+    def convert(self, value: float) -> float:
+        return value * 100
+
+    def back_convert(self, value: float) -> float:
+        return value / 100
+
+
+class IntPercentageConverter(IValueConverter[int, int]):
+    def convert(self, value: int) -> int:
+        return int(value * 100)
+
+    def back_convert(self, value: int) -> int:
+        return int(value / 100)
+
+
+class CaptitalizeConverter(IValueConverter[str, str]):
+    def convert(self, value: str) -> str:
+        return value.upper() + "_suffix"
+
+    def back_convert(self, value: str) -> str:
+        return value.lower()[-8:]
+
+
+class PageHome(QWidget, QtBindableObject):
     def __init__(self) -> None:
         super().__init__()
         self.vm = HomeViewModel()
@@ -15,12 +39,9 @@ class PageHome(QWidget, BindableObject):
         self.initialize_component()
         self.initialize_binding()
 
-        print("<===>")
-        print(6 in self.vm.numbers)
-        print(self.vm.numbers.pop(3))
         for number in self.vm.numbers:
             print(number)
-        return
+        ...
 
     def initialize_component(self):
         lay = QHBoxLayout()
@@ -54,8 +75,10 @@ class PageHome(QWidget, BindableObject):
         layout.addWidget(self.labelName)
         layout.addSpacing(10)
         layout.addWidget(QLabel("<h2>Computed Properties Sections</h2>"))
+        layout.addWidget(QLabel("Voltage"))
         layout.addWidget(self.spinVoltage)
         layout.addWidget(self.labelVoltage)
+        layout.addWidget(QLabel("Capacity"))
         layout.addWidget(self.spinCapacity)
         layout.addWidget(self.spinEnergy)
 
@@ -72,27 +95,22 @@ class PageHome(QWidget, BindableObject):
         return None
 
     def initialize_binding(self) -> None:
-        self.binding_value(self.labelName, self.vm.username)
-        # self.vm.username.binding(self.entryName.setText)
-        # self.vm.username.binding(self.labelName.setText)
-        # self.vm.username.rbinding(self.entryName.textChanged)
-        # self.vm.username.binding(lambda v: print(f"==>{v}"))
-        self.binding_value(self.spinVoltage, self.vm.voltage, use_percentage=True)
+        self.binding_label(
+            self.labelName, self.vm.username, converter=CaptitalizeConverter()
+        )
+        self.binding_spinbox(
+            self.spinVoltage, self.vm.voltage, converter=IntPercentageConverter()
+        )
         self.vm.voltage.binding(self.spinVoltage.setValue)
-        # self.vm.voltage.rbinding(self.spinVoltage.valueChanged)
-        # self.vm.voltage.binding(lambda v: print(f"value===>{v}"))
 
-        converter = ToStrConverter(str, str)
-        converter.convert(8)
-        self.binding_value(self.entryName, self.vm.username)
-        self.binding_value(self.checkNumbers, self.vm.state)
-        self.binding_value(self.spinVoltage, self.vm.voltage, use_percentage=True)
-        self.binding_value(
+        self.binding_lineedit(self.entryName, self.vm.username)
+        self.binding_checkbox(self.checkNumbers, self.vm.state)
+        self.binding_spinbox(self.spinVoltage, self.vm.voltage)
+        self.binding_label(
             self.labelVoltage, self.vm.voltage, string_format="Updated: {:5.10f}"
         )
         self.binding_state(self.spinVoltage, self.vm.hide, prop="visibility")
-        self.binding_value(self.spinCapacity, self.vm.capacity)
-        # self.binding_value(self.spinEnergy, self.vm.energy)
+        self.binding_doublespinbox(self.spinCapacity, self.vm.capacity)
         self.binding_command(self.buttonCall, RelayCommand(self.display_information))
         self.binding_command(self.buttonNewCommand, self.vm.command_test_new_command)
 
@@ -103,7 +121,7 @@ class PageHome(QWidget, BindableObject):
             display_name="infos",
             observable_value=self.vm.user,
         )
-        self.binding_value(self.entry_for_number, self.vm.counter)
+        self.binding_lineedit(self.entry_for_number, self.vm.counter)
         return None
 
     def display_information(self):

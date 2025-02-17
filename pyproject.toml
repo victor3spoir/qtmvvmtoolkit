@@ -26,21 +26,22 @@ Repository = "https://github.com/victor3spoir/qtmvvmtoolkit"
 Issues = "https://github.com/victor3spoir/qtmvvmtoolkit/issues"
 
 
-# [build-system]
-# requires = ["setuptools>=64", "setuptools-scm>=8"]
-# build-backend = "setuptools.build_meta"
+
 [build-system]
-requires = ["pdm-backend"]
-build-backend = "pdm.backend"
+build-backend = "flit_core.buildapi"
+requires = ["flit_core>=3,<4"]
+
+[tool.flit.module]
+name = "qtmvvmtoolkit"
 
 
-[tool.setuptools]
-license-files = ["LICENCE"]
+# [tool.setuptools]
+# license-files = ["LICENCE"]
 
 
-[tool.pdm.version]
-source = "scm"
-fallback_version = "0.0.1"
+# [tool.pdm.version]
+# source = "scm"
+# fallback_version = "0.0.1"
 
 
 [dependency-groups]
@@ -52,4 +53,5 @@ dev = [
     "twine>=6.0.1",
     "setuptools>=75.6.0",
     "setuptools-scm>=8.1.0",
+    "gitpython>=3.1.43",
 ]
