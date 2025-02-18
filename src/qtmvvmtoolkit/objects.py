@@ -300,19 +300,17 @@ class QtBindableObject(QObject, BindableObject):
         self,
         widget: QLabel,
         observable: typing.Union[ObservableProperty[T], ComputedObservableProperty[T]],
-        string_format: str | None = None,
         converter: IValueConverter[T, typing.Any] | None = None,
     ) -> None:
         # _type: typing.Type = observable.__orig_class__.__args__[0]
+        def update_label(value: T):
+            if converter:
+                widget.setText(converter.convert(value))
+            else:
+                widget.setText(str(value))
 
-        if converter:
-            observable.valueChanged += lambda value: widget.setText(
-                converter.convert(value)
-            )
-            observable.valueChanged(observable.get())
-            return
-        observable.valueChanged += lambda value: widget.setText(str(value))
-        observable.valueChanged(observable.get())
+        observable.valueChanged += update_label
+        update_label(observable.get())
 
         return None
 
@@ -325,19 +323,25 @@ class QtBindableObject(QObject, BindableObject):
         ],
         converter: IValueConverter[int, int] | None = None,
     ) -> None:
-        if converter:
-            observable.valueChanged += lambda value: widget.setValue(
-                converter.convert(value)
-            )
-            widget.valueChanged.connect(
-                lambda value: observable.set(converter.back_convert(value))
-            )
-            # observable.valueChanged(observable.get())
-            return None
+        def update_widget(value: int) -> None:
+            widget.blockSignals(True)
+            if converter:
+                widget.setValue(converter.convert(value))
+            else:
+                widget.setValue(value)
+            widget.blockSignals(False)
 
-        observable.valueChanged += lambda v: widget.setValue(v)
-        widget.valueChanged.connect(observable.set)
-        observable.valueChanged(observable.get())
+        def update_observable(value: int) -> None:
+            if converter:
+                observable.set(converter.back_convert(value))
+            else:
+                observable.set(value)
+
+        observable.valueChanged += update_widget
+        widget.valueChanged.connect(update_observable)
+
+        # Set the initial value
+        update_widget(observable.get())
         return None
 
     def binding_doublespinbox(
@@ -347,24 +351,17 @@ class QtBindableObject(QObject, BindableObject):
             ObservableProperty[float],
             ComputedObservableProperty[float],
         ],
-        # transformer: typing.Optional[typing.Literal["percent"]] = None,
-        use_percentage: bool | None = None,
         converter: IValueConverter[typing.Any, typing.Any] | None = None,
     ) -> None:
         if converter:
-            # observable.valueChanged += lambda value: widget.setValue(
-            #     converter.convert(value)
-            # )
-            # widget.valueChanged.connect(
-            #     lambda value: observable.set(converter.back_convert(value))
-            # )
-            # observable.valueChanged(observable.get())
+            observable.valueChanged += lambda value: widget.setValue(
+                converter.convert(value)
+            )
+            widget.valueChanged.connect(
+                lambda value: observable.set(converter.back_convert(value))
+            )
+            observable.valueChanged(observable.get())
             return None
-        # if use_percentage:
-        #     observable.valueChanged += lambda value: widget.setValue(value * 100)
-        #     widget.valueChanged.connect(lambda value: observable.set(value / 100))
-        #     observable.valueChanged(observable.get())
-        #     return None
 
         observable.valueChanged += lambda v: widget.setValue(v)
         widget.valueChanged.connect(lambda v: observable.set(v))

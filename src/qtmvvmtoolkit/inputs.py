@@ -12,8 +12,6 @@ import dataclasses
 import typing
 
 
-loguru.logger.remove()
-
 _T = TypeVar("_T")
 T = TypeVar("T")
 
@@ -35,7 +33,7 @@ class ObservableProperty(Generic[_T]):
             logger.warning(
                 f"The type of value {type(value)} is incompatible with {self._type}"
             )
-            return
+            return None
         if value != self.value:
             self.value = value
             self.valueChanged(self.value)
@@ -69,7 +67,7 @@ class ComputedObservableProperty(Generic[_T]):
 
         for observable_prop in self.observable_props:
             observable_prop.valueChanged += self.update
-        return
+        return None
 
     def get(self) -> _T:
         return self.value
