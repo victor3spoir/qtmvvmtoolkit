@@ -1,5 +1,6 @@
 # coding:utf-8
 
+from datetime import date, datetime
 import typing
 import warnings
 
@@ -44,7 +45,7 @@ class BindableObject:
         )
 
 
-class QtBindableObject(QObject, BindableObject):
+class QtBindableObject(BindableObject, QObject):
     def __init__(
         self,
         parent: typing.Optional[QWidget] = None,
@@ -52,76 +53,20 @@ class QtBindableObject(QObject, BindableObject):
         super().__init__(parent)
         ...
 
-    def initialize_components(self) -> None:
-        raise NotImplementedError(
-            "Please, redefine this function, and call it in the init"
-        )
-
-    def initialize_bindings(self) -> None:
-        raise NotImplementedError(
-            "Please, redefine this function, and call it in the init"
-        )
-
     def binding_state(
         self,
         widget: QWidget,
-        observable: typing.Union[
-            ObservableProperty[bool], ComputedObservableProperty[bool]
-        ],
+        observable: ObservableProperty[bool] | ComputedObservableProperty[bool],
         prop: typing.Literal["visibility", "state", "readonly"],
     ) -> None:
         if prop == "visibility":
-            observable.valueChanged += lambda v: widget.setVisible(bool(v))
+            observable.valueChanged += widget.setVisible
         if prop == "state":
-            observable.valueChanged += lambda v: widget.setEnabled(bool(v))
-        if prop == "readonly":
-            if hasattr(widget, "setReadOnly"):
-                observable.valueChanged.connect(widget.setReadOnly)
+            observable.valueChanged += widget.setEnabled
+        if prop == "readonly" and hasattr(widget, "setReadOnly"):
+            observable.valueChanged += widget.setReadOnly
         observable.valueChanged(observable.get())
         return None
-
-    # def binding_value(
-    #     self,
-    #     widget: QWidget,
-    #     observable: typing.Union[ObservableProperty[T], ComputedObservableProperty[T]],
-    #     *,
-    #     string_format: typing.Optional[str] = None,
-    #     mode: typing.Literal["1-way", "2-way"] = "2-way",
-    #     bindings: typing.Literal["on-typing", "on-typed"] = "on-typed",
-    #     use_percentage: bool | None = None,
-    # ) -> None:
-    #     # use percentage is only reserved for qspinbox & qdoublespinbox
-    #     # NOTE: this is about to know the type of observable
-    #     # _type: type = typing.get_args(observable.__orig_class__)[0]
-
-    #     match widget:
-    #         case QLineEdit():
-    #             self.binding_lineedit(widget, observable, bindings=bindings)
-    #         case QLabel():
-    #             self.binding_label(widget, observable, string_format)
-    #         case QSpinBox():
-    #             self.binding_spinbox(widget, observable, use_percentage)
-    #         case QDoubleSpinBox():
-    #             self.binding_doublespinbox(widget, observable, use_percentage)
-    #         case QCheckBox():
-    #             self.binding_checkbox(widget, observable)
-    #         case QTextEdit():
-    #             print("Not available")
-    #         case QDateEdit():
-    #             print("Not available")
-    #         case QDateTimeEdit():
-    #             print("Not available")
-    #         case _:
-    #             raise Exception("unhandled case.")
-    #     return None
-
-    # def binding_relayable(
-    #     self,
-    #     func: typing.Callable[[], None],
-    #     relayable: RelayableProperty,
-    # ) -> None:
-    #     relayable.relayed.connect(func)
-    #     return None
 
     def binding_command(
         self,
@@ -242,28 +187,26 @@ class QtBindableObject(QObject, BindableObject):
     def binding_lineedit(
         self,
         widget: QLineEdit,
-        observable: typing.Union[ObservableProperty[T], ComputedObservableProperty[T]],
+        observable: ObservableProperty[T] | ComputedObservableProperty[T],
         *,
-        string_format: str | None = None,
         bindings: typing.Literal["on-typing", "on-typed"] = "on-typing",
-        disable_editing: bool = False,
+        converter: IValueConverter[T, str] | None = None,
     ) -> None:
-        _type: typing.Type = observable.__orig_class__.__args__[0]
+        def _update_widget(value: T):
+            widget.setText(str(value))
+            return None
 
-        def __handle_textedit_binding(
-            widget: QLineEdit,
-            observable: ObservableProperty[typing.Any],
-        ) -> None:
+        def _update_observable(value: typing.Any):
             _type: typing.Type = observable.__orig_class__.__args__[0]
             try:
-                _value: typing.Any
                 if _type in [int, float]:
-                    _value = _type(eval(widget.text()))
+                    value = _type(eval(widget.text()))
                 elif _type in [str]:
-                    _value = _type(widget.text())
+                    value = _type(widget.text())
                 else:
-                    _value = ""
-                observable.set(_value)
+                    value = ""
+                observable.set(value)
+                return None
 
             except NameError:
                 widget.clear()
@@ -271,28 +214,12 @@ class QtBindableObject(QObject, BindableObject):
                 widget.clear()
             return None
 
-        if disable_editing:
-            widget.setReadOnly(disable_editing)
-
         if bindings == "on-typing":
-            widget.textChanged.connect(
-                lambda: __handle_textedit_binding(widget, observable)
-            )
-            ...
+            widget.textChanged.connect(_update_observable)
         if bindings == "on-typed":
-            widget.editingFinished.connect(
-                lambda: __handle_textedit_binding(widget, observable)
-            )
+            widget.textChanged.connect(_update_observable)
 
-        if string_format:
-            widget.setReadOnly(True)
-            observable.valueChanged += lambda value: widget.setText(
-                string_format.format(value)
-            )
-            observable.valueChanged(observable.get())
-            return
-
-        observable.valueChanged += lambda value: widget.setText(str(value))
+        observable.valueChanged += _update_widget
         observable.valueChanged(observable.get())
         return None
 
@@ -323,7 +250,7 @@ class QtBindableObject(QObject, BindableObject):
         ],
         converter: IValueConverter[int, int] | None = None,
     ) -> None:
-        def update_widget(value: int) -> None:
+        def _update_widget(value: int) -> None:
             widget.blockSignals(True)
             if converter:
                 widget.setValue(converter.convert(value))
@@ -331,17 +258,16 @@ class QtBindableObject(QObject, BindableObject):
                 widget.setValue(value)
             widget.blockSignals(False)
 
-        def update_observable(value: int) -> None:
+        def _update_observable(value: int) -> None:
             if converter:
                 observable.set(converter.back_convert(value))
             else:
                 observable.set(value)
 
-        observable.valueChanged += update_widget
-        widget.valueChanged.connect(update_observable)
+        observable.valueChanged += _update_widget
+        widget.valueChanged.connect(_update_observable)
 
-        # Set the initial value
-        update_widget(observable.get())
+        observable.valueChanged(observable.get())
         return None
 
     def binding_doublespinbox(
@@ -353,47 +279,62 @@ class QtBindableObject(QObject, BindableObject):
         ],
         converter: IValueConverter[typing.Any, typing.Any] | None = None,
     ) -> None:
-        if converter:
-            observable.valueChanged += lambda value: widget.setValue(
-                converter.convert(value)
-            )
-            widget.valueChanged.connect(
-                lambda value: observable.set(converter.back_convert(value))
-            )
-            observable.valueChanged(observable.get())
+        def _update_widget(value: float):
+            widget.setValue
             return None
 
-        observable.valueChanged += lambda v: widget.setValue(v)
-        widget.valueChanged.connect(lambda v: observable.set(v))
+        def _update_observable(value: float):
+            if converter:
+                observable.set(converter.back_convert(value))
+            else:
+                observable.set(value)
+            return None
+
+        # if converter:
+        #     observable.valueChanged += lambda value: widget.setValue(
+        #         converter.convert(value)
+        #     )
+        #     widget.valueChanged.connect(
+        #         lambda value: observable.set(converter.back_convert(value))
+        #     )
+        #     observable.valueChanged(observable.get())
+        #     return None
+
+        observable.valueChanged += _update_widget
+        widget.valueChanged.connect(_update_observable)
+
         observable.valueChanged(observable.get())
         return None
 
     def binding_checkbox(
         self,
         widget: QCheckBox,
-        observable: typing.Union[
-            ObservableProperty[bool],
-            ComputedObservableProperty[bool],
-        ],
+        observable: ObservableProperty[bool] | ComputedObservableProperty[bool],
     ) -> None:
-        # TODO: handle each case along the checked state
-        def __handle_checkbox_binding(
-            widget: QCheckBox,
-            observable: typing.Union[
-                ObservableProperty[bool],
-                ComputedObservableProperty[bool],
-            ],
-        ) -> None:
-            if widget.checkState() == Qt.CheckState.Checked:
-                observable.set(True)
-            if widget.checkState() == Qt.CheckState.Unchecked:
-                observable.set(False)
+        _type: typing.Type = observable.__orig_class__.__args__[0]
+        if _type is not bool:
+            raise ValueError("The observable must be a boolean type")
+
+        def _update_widget(value: bool) -> None:
+            widget.setChecked(value)
             return None
 
-        observable.valueChanged += lambda v: widget.setChecked(bool(v))
-        widget.stateChanged.connect(
-            lambda: __handle_checkbox_binding(widget, observable)
-        )
+        def _update_observable(
+            checked_state: int,
+        ) -> None:
+            match checked_state:
+                case 2:
+                    observable.set(True)
+                case 0:
+                    observable.set(False)
+                case 1:
+                    observable.set(False)
+                case _:
+                    return
+            return None
+
+        observable.valueChanged += _update_widget
+        widget.stateChanged.connect(_update_observable)
         observable.valueChanged(observable.get())
         return None
 
@@ -461,121 +402,12 @@ class QtBindableObject(QObject, BindableObject):
         widget.currentTextChanged.emit(widget.currentText())
         return None
 
-    # def __handle_textedit_binding(
-    #     self,
-    #     widget: QLineEdit,
-    #     observable: ObservableProperty[typing.Any],
-    # ) -> None:
-    #     print("called")
-    #     _type: typing.Type = observable.__orig_class__.__args__[0]
-    #     try:
-    #         _value = _type(eval(widget.text()))
-    #         observable.set(_value)
-    #     except NameError:
-    #         widget.clear()
-    #     except SyntaxError:
-    #         widget.clear()
-    #     return None
-
-    # def binding_textedit_number(
-    #     self,
-    #     widget: QLineEdit,
-    #     observable: typing.Union[
-    #         ObservableProperty[int],
-    #         ObservableProperty[float],
-    #         ComputedObservableProperty[int],
-    #         ComputedObservableProperty[float],
-    #     ],
-    # ) -> None:
-    #     warnings.warn("WARN: deprecated function")
-    #     widget.setReadOnly(True)
-    #     observable.valueChanged.connect(lambda value: widget.setText(str(value)))
-    #     observable.valueChanged.emit(observable.get())
-    #     return None
-
-    # def binding_textedit_str(
-    #     self,
-    #     widget: QLineEdit,
-    #     observable: typing.Union[
-    #         ObservableProperty[str],
-    #         ComputedObservableProperty[str],
-    #     ],
-    # ) -> None:
-    #     warnings.warn("WARN: deprecated function")
-    #     observable.valueChanged.connect(widget.setText)
-    #     widget.textChanged.connect(observable.set)
-    #     observable.valueChanged.emit(observable.get())
-    #     return None
-
-    # def binding_label_number(
-    #     self,
-    #     widget: QLabel,
-    #     observable: ObservableProperty[typing.Any],
-    #     #     ObservableProperty[float],
-    #     #     ComputedObservableProperty[int],
-    #     #     ComputedObservableProperty[float],
-    #     # ],
-    #     # transformer: typing.Optional[
-    #     #     typing.Callable[[typing.Union[int, float]], str]
-    #     # ] = None,
-    #     string_format: str | None = None,
-    # ) -> None:
-    #     if not string_format:
-    #         observable.valueChanged.connect(
-    #             lambda value: widget.setText(str(value)),
-    #         )
-    #     # if transformer:
-    #     #     observable.valueChanged.connect(
-    #     #         lambda value: widget.setText(transformer((value))),
-    #     #     )
-    #     if string_format:
-    #         observable.valueChanged.connect(
-    #             lambda value: widget.setText(string_format.format(value)),
-    #         )
-
-    #     observable.valueChanged.emit(observable.get())
-    #     return
-
-    # def binding_label_string(
-    #     self,
-    #     widget: QLabel,
-    #     observable: typing.Union[
-    #         ObservableProperty[str], ComputedObservableProperty[str]
-    #     ],
-    # ) -> None:
-    #     observable.valueChanged.connect(widget.setText)
-    #     observable.valueChanged.emit(observable.get())
-    #     return None
-
-    # def __handle_checkbox_binding(
-    #     self,
-    #     widget: QCheckBox,
-    #     observable: typing.Union[
-    #         ObservableProperty[bool],
-    #         ComputedObservableProperty[bool],
-    #     ],
-    # ) -> None:
-    #     if widget.checkState() == Qt.CheckState.Checked:
-    #         observable.set(True)
-    #     if widget.checkState() == Qt.CheckState.Unchecked:
-    #         observable.set(False)
-    #     return None
-
-    # Widgets
-    # def binding_widget(
-    #     self,
-    #     widget: QWidget,
-    #     observable: typing.Union[
-    #         ObservableProperty[bool], ComputedObservableProperty[bool]
-    #     ],
-    #     prop: typing.Literal["visibility", "state", "readonly"],
-    # ):
-    #     if prop == "visibility":
-    #         observable.valueChanged.connect(widget.setVisible)
-    #     if prop == "state":
-    #         observable.valueChanged.connect(widget.setEnabled)
-    #     if prop == "readonly":
-    #         if hasattr(widget, "setReadOnly"):
-    #             observable.valueChanged.connect(widget.setReadOnly)
-    #     observable.valueChanged.emit(observable.get())
-    #     return None
+    def binding_textedit(
+        self, widget: QTextEdit, observable: ObservableProperty[str]
+    ): ...
+    def binding_datetimeedit(
+        self, widget: QDateTimeEdit, observable: ObservableProperty[datetime]
+    ): ...
+    def binding_dateedit(
+        self, widget: QDateEdit, observable: ObservableProperty[date]
+    ): ...
