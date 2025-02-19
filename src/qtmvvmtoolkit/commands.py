@@ -22,7 +22,7 @@ class RelayCommand:
     ) -> None:
         self.func = func
         self.kwargs = kwargs
-        return
+        return None
 
     def __call__(self) -> Any:
         if self.kwargs:

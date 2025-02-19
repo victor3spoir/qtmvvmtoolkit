@@ -68,7 +68,9 @@ class Widget(QWidget, QtBindableObject):
         ...
 
     def initialize_bindings(self) -> None:
-        self.binding_lineedit(self.line_username, self._vm.username)
+        self.binding_lineedit(
+            self.line_username, self._vm.username, bindings="on-typed"
+        )
         self.binding_lineedit(self.line_email, self._vm.email)
         self.binding_spinbox(self.spin_age, self._vm.age)
         self.binding_checkbox(self.check_visible, self._vm.is_visible)

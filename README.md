@@ -153,4 +153,4 @@ This project is licensed under the MIT License.
 
 ## Contact
 
-For questions or support, please reach out to <mailto:victorespoir.dev@gmail.com>.
+For questions or support, please reach out to <victorespoir.dev@gmail.com>.

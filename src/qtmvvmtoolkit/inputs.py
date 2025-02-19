@@ -45,7 +45,7 @@ class ObservableProperty(Generic[_T]):
 
     def rbinding(self, signal: Signal) -> None:
         """Reverse binding method"""
-        signal.connect(lambda v: self.set(v))
+        signal.connect(self.set)
         self.valueChanged(self.get())
         return None
 
