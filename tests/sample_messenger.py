@@ -1,9 +1,8 @@
 # coding:utf-8
 from typing import Any
 
-from qtpy.QtCore import QCoreApplication
-
 from qtmvvmtoolkit.messenger import Message, Messenger
+from qtpy.QtCore import QCoreApplication
 
 
 class IntMessage(Message[int]):
@@ -26,17 +25,15 @@ def s_operation(value: Any):
 
 def main() -> None:
     app = QCoreApplication([])
+    Messenger.default().register(IntMessage, operation)
+    Messenger.default().register(IntMessage, s_operation)
+    Messenger.default().register(StrMessage, operation)
+    Messenger.default().register(StrMessage, s_operation)
 
-    Messenger.Default.register(IntMessage)
-    Messenger.Default.register(StrMessage)
+    # MessengerV2.Default.use(IntMessage, operation)
 
-    Messenger.Default.use(IntMessage, operation)
-    Messenger.Default.use(IntMessage, s_operation)
-    Messenger.Default.use(StrMessage, operation)
-    Messenger.Default.use(StrMessage, s_operation)
-
-    Messenger.Default.send(IntMessage(6))
-    Messenger.Default.send(StrMessage("sdfdsfdsf===>"))
+    Messenger.default().send(IntMessage(6))
+    Messenger.default().send(StrMessage("sdfdsfdsf===>"))
     app.exec()
     return None
 

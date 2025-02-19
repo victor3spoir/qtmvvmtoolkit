@@ -2,15 +2,15 @@
 
 
 import context
-from qtmvvmtoolkit.messenger import MessageV2, MessengerV2
+from qtmvvmtoolkit.messenger import Message, Messenger
 
 context.__file__
 
 
-class StrMessage(MessageV2[str]): ...
+class StrMessage(Message[str]): ...
 
 
-class IntMessage(MessageV2[str]): ...
+class IntMessage(Message[str]): ...
 
 
 def called_from(value: str):
@@ -20,7 +20,7 @@ def called_from(value: str):
 
 class TestMessengerV2:
     def test_message_case(self):
-        messenger = MessengerV2()
+        messenger = Messenger()
         messenger.register(StrMessage, lambda v: print(f"messenger:send {v}"))
         messenger.register(StrMessage, called_from)
 
