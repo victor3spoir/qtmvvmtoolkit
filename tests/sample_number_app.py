@@ -130,7 +130,11 @@ class HomePage(QWidget, QtBindableObject):
 
 
 if __name__ == "__main__":
+    from qdarktheme import load_palette, load_stylesheet
+
     app = QApplication([])
+    app.setStyleSheet(load_stylesheet("auto"))
+    app.setPalette(load_palette("auto"))
     home = HomePage(HomeViewModel())
     home.show()
     sys.exit(app.exec())

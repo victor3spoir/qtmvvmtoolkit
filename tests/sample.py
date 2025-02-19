@@ -1,7 +1,6 @@
 from dataclasses import dataclass
-import dataclasses
 import context
-from qtmvvmtoolkit.inputs import ObservableClass, ObservableClassV2
+from qtmvvmtoolkit.inputs import ObservableClassV2
 
 context.__file__
 

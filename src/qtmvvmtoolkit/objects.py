@@ -1,25 +1,25 @@
 # coding:utf-8
 
-from datetime import date, datetime
 import typing
 import warnings
+from datetime import date, datetime
 
-from qtpy.QtCore import QObject, Qt, QVariant
+from qtpy.QtCore import QDate, QDateTime, QObject, QVariant
 from qtpy.QtGui import QAction
 from qtpy.QtWidgets import (
     QCheckBox,
     QComboBox,
+    QDateEdit,
+    QDateTimeEdit,
     QDoubleSpinBox,
     QLabel,
     QLineEdit,
     QPushButton,
     QRadioButton,
     QSpinBox,
+    QTextEdit,
     QToolButton,
     QWidget,
-    QTextEdit,
-    QDateTimeEdit,
-    QDateEdit,
 )
 
 from qtmvvmtoolkit.commands import RCommand, RelayCommand
@@ -114,31 +114,41 @@ class QtBindableObject(BindableObject, QObject):
             ComputedObservableProperty[typing.Any],
         ]
         | None = None,
-        selection_default: bool = False,
-        display_name: typing.Optional[str] = None,
-        visibles_items: int = 7,
+        default_select: bool = False,
+        visible_items: int = 5,
+        converter: IValueConverter[typing.Any, str] | None = None,
     ) -> None:
         widget.setDuplicatesEnabled(False)
-        widget.setMaxVisibleItems(visibles_items)
-        widget.clear()
+        widget.setMaxVisibleItems(visible_items)
 
-        observable.valueChanged += lambda v: widget.clear()
-        observable.valueChanged += lambda values: self._fill_combobox_items(
-            widget, values, display_name
-        )
-        if selection_default:
-            observable.valueChanged(observable.collection)
-            # widget.setCurrentIndex(0)
-        else:
-            observable.valueChanged(observable.collection)
-            widget.setCurrentIndex(-1)
+        def _update_widget(
+            values: typing.List[typing.Any],
+        ) -> None:
+            _current_text = widget.currentText()
+            widget.clear()
 
-        if observable_value:
-            widget.currentTextChanged.connect(
-                lambda: observable_value.set(widget.currentData())
-            )
+            for value in values:
+                if isinstance(value, (str, int, float)):
+                    widget.addItem(str(value), userData=QVariant(value))
+                elif not converter:
+                    raise ValueError("Please provide a converter")
+                else:
+                    widget.addItem(converter.convert(value), userData=QVariant(value))
+            widget.setCurrentText(_current_text)
+            return None
+
+        def _update_observable_value() -> None:
+            observable_value.set(widget.currentData())
+            return None
+
+        observable.valueChanged += _update_widget
+        observable.valueChanged(observable.collection)
+        widget.setCurrentIndex(0) if default_select else widget.setCurrentIndex(-1)
+
+        if observable_value is not None:
+            widget.currentTextChanged.connect(_update_observable_value)
             widget.currentTextChanged.emit(widget.currentText())
-        return
+        return None
 
     def binding_combobox_selection(
         self,
@@ -230,14 +240,14 @@ class QtBindableObject(BindableObject, QObject):
         converter: IValueConverter[T, typing.Any] | None = None,
     ) -> None:
         # _type: typing.Type = observable.__orig_class__.__args__[0]
-        def update_label(value: T):
+        def _update_widget(value: T):
             if converter:
                 widget.setText(converter.convert(value))
             else:
                 widget.setText(str(value))
 
-        observable.valueChanged += update_label
-        update_label(observable.get())
+        observable.valueChanged += _update_widget
+        _update_widget(observable.get())
 
         return None
 
@@ -380,10 +390,6 @@ class QtBindableObject(BindableObject, QObject):
                 else:
                     widget.addItem(str(value), userData=QVariant(value))
 
-            # if isinstance(value, Path):
-            #     widget.addItem(value.name, userData=QVariant(value))
-            # else:
-            #     widget.addItem(str(value), userData=QVariant(value))
         return None
 
     def _binding_combobox_value(
@@ -407,7 +413,30 @@ class QtBindableObject(BindableObject, QObject):
     ): ...
     def binding_datetimeedit(
         self, widget: QDateTimeEdit, observable: ObservableProperty[datetime]
-    ): ...
-    def binding_dateedit(
-        self, widget: QDateEdit, observable: ObservableProperty[date]
-    ): ...
+    ):
+        def _update_widget(value: date):
+            widget.setDate(value)
+            return None
+
+        def _update_observable(value: QDateTime):
+            observable.set(value.toPyDateTime())
+            return None
+
+        observable.valueChanged += _update_widget
+        widget.dateTimeChanged.connect(_update_observable)
+        observable.valueChanged(observable.get())
+        return None
+
+    def binding_dateedit(self, widget: QDateEdit, observable: ObservableProperty[date]):
+        def _update_widget(value: date):
+            widget.setDate(value)
+            return None
+
+        def _update_observable(value: QDate):
+            observable.set(value.toPyDate())
+            return None
+
+        observable.valueChanged += _update_widget
+        widget.dateChanged.connect(_update_observable)
+        observable.valueChanged(observable.get())
+        return None

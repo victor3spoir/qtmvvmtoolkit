@@ -1,4 +1,5 @@
 # coding:utf-8
+from datetime import date
 import sys
 
 import context
@@ -12,15 +13,19 @@ from PyQt6.QtWidgets import (
     QLineEdit,
     QSpinBox,
     QLabel,
+    QCheckBox,
     QApplication,
+    QDateEdit,
 )
 
 
 class ViewModel:
     def __init__(self) -> None:
-        self.username = ObservableProperty[str]("")
-        self.email = ObservableProperty[str]("")
+        self.username = ObservableProperty[str]("john doe")
+        self.email = ObservableProperty[str]("john@doe.de")
         self.age = ObservableProperty[int](10)
+        self.birthdate = ObservableProperty[date](date.today())
+        self.is_visible = ObservableProperty[bool](True)
 
 
 class Widget(QWidget, QtBindableObject):
@@ -33,6 +38,8 @@ class Widget(QWidget, QtBindableObject):
         self.line_username = QLineEdit()
         self.line_email = QLineEdit()
         self.spin_age = QSpinBox()
+        self.check_visible = QCheckBox()
+        self.date_birthdate = QDateEdit()
 
         layout.addWidget(QLabel("Username"))
         layout.addWidget(self.line_username)
@@ -40,14 +47,22 @@ class Widget(QWidget, QtBindableObject):
         layout.addWidget(self.line_email)
         layout.addWidget(QLabel("Age"))
         layout.addWidget(self.spin_age)
+        layout.addWidget(QLabel("Visible"))
+        layout.addWidget(self.check_visible)
+        layout.addWidget(QLabel("BirthDate"))
+        layout.addWidget(self.date_birthdate)
 
         layout.addWidget(QLabel("<h2>Watch</h2>"))
         self.label_username = QLabel("---")
         self.label_email = QLabel("---")
         self.label_age = QLabel("---")
+        self.label_birthdate = QLabel("---")
+        self.label_visible = QLabel("IsVisisble or Not")
         layout.addWidget(self.label_username)
         layout.addWidget(self.label_email)
         layout.addWidget(self.label_age)
+        layout.addWidget(self.label_visible)
+        layout.addWidget(self.label_birthdate)
 
         self.initialize_bindings()
         ...
@@ -56,10 +71,15 @@ class Widget(QWidget, QtBindableObject):
         self.binding_lineedit(self.line_username, self._vm.username)
         self.binding_lineedit(self.line_email, self._vm.email)
         self.binding_spinbox(self.spin_age, self._vm.age)
+        self.binding_checkbox(self.check_visible, self._vm.is_visible)
+        self.binding_dateedit(self.date_birthdate, self._vm.birthdate)
 
         self.binding_label(self.label_username, self._vm.username)
         self.binding_label(self.label_email, self._vm.email)
         self.binding_label(self.label_age, self._vm.age)
+        # self.binding_state(self.label_visible, self._vm.is_visible, "visibility")
+        self.binding_label(self.label_visible, self._vm.is_visible)
+        self.binding_label(self.label_birthdate, self._vm.birthdate)
         return None
 
 

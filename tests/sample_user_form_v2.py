@@ -35,7 +35,7 @@ class Widget(QWidget, QtBindableObject):
         self.line_username = QLineEdit()
         self.line_email = QLineEdit()
         self.spin_age = QSpinBox()
-        self.check_visible = QCheckBox()
+        self.check_visible = QCheckBox("Toggle")
 
         layout.addWidget(QLabel("Username"))
         layout.addWidget(self.line_username)
@@ -74,7 +74,11 @@ class Widget(QWidget, QtBindableObject):
 
 
 if __name__ == "__main__":
+    from qdarktheme import load_palette, load_stylesheet
+
     app = QApplication([])
+    app.setStyleSheet(load_stylesheet("auto"))
+    app.setPalette(load_palette("auto"))
     w = Widget(ViewModel())
     w.show()
     sys.exit(app.exec())

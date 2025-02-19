@@ -4,12 +4,10 @@ from typing import Generic, TypeVar
 import warnings
 
 from loguru import logger
-import loguru
 from qtpy.QtCore import Signal
 from qtpy.QtWidgets import QComboBox
 from events import Event
 import dataclasses
-import typing
 
 
 _T = TypeVar("_T")
@@ -56,7 +54,7 @@ class ComputedObservableProperty(Generic[_T]):
     def __init__(
         self,
         value: _T,
-        observable_props: typing.List[ObservableProperty[_T]],
+        observable_props: typing.List[ObservableProperty[typing.Any]],
         update_function: typing.Callable[..., _T],
     ) -> None:
         super().__init__()
@@ -283,7 +281,6 @@ class ObservableClass:
 
 import dataclasses
 import typing
-from loguru import logger
 from events import Event
 
 
