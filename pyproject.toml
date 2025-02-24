@@ -1,7 +1,7 @@
 [project]
 name = "qtmvvmtoolkit"
 authors = [{ name = "victor3spoir", email = "victorespoir.dev@email.com" }]
-description = "Add your description here"
+description = "Build MVVM like software pattern for qt application for Python"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENCE" }
@@ -26,32 +26,13 @@ Repository = "https://github.com/victor3spoir/qtmvvmtoolkit"
 Issues = "https://github.com/victor3spoir/qtmvvmtoolkit/issues"
 
 
-
 [build-system]
-build-backend = "flit_core.buildapi"
-requires = ["flit_core>=3,<4"]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
 
-[tool.flit.module]
-name = "qtmvvmtoolkit"
-
-
-# [tool.setuptools]
-# license-files = ["LICENCE"]
-
-
-# [tool.pdm.version]
-# source = "scm"
-# fallback_version = "0.0.1"
+[tool.hatch.version]
+source = "vcs"
 
 
 [dependency-groups]
-dev = [
-    "pytest-cov>=6.0.0",
-    "pytest>=8.3.4",
-    "ruff>=0.8.3",
-    "pydantic>=2.10.4",
-    "twine>=6.0.1",
-    "setuptools>=75.6.0",
-    "setuptools-scm>=8.1.0",
-    "gitpython>=3.1.43",
-]
+dev = ["pytest-cov>=6.0.0", "pytest>=8.3.4", "ruff>=0.8.3", "pydantic>=2.10.4"]

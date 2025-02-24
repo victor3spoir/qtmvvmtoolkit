@@ -13,7 +13,7 @@ from qtmvvmtoolkit.inputs import (
     ComputedObservableProperty,
     ObservableProperty,
 )
-from qtmvvmtoolkit.objects import QtBindableObject
+from qtmvvmtoolkit.objects import BindableObject
 from qtpy.QtWidgets import (
     QLabel,
     QSpinBox,
@@ -72,7 +72,7 @@ class HomeViewModel:
         return self.voltage.get() * self.capacity.get()
 
 
-class HomePage(QWidget, QtBindableObject):
+class HomePage(QWidget, BindableObject):
     def __init__(self, vm: HomeViewModel) -> None:
         super().__init__()
         self.vm = vm

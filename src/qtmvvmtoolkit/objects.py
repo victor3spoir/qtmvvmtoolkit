@@ -33,7 +33,18 @@ from qtmvvmtoolkit.inputs import (
 T = typing.TypeVar("T")
 
 
-class BindableObject:
+class ObservableObject:
+    def observables_data(self) -> typing.Dict[str, typing.Any]: ...
+
+
+class BindableObject(QObject):
+    def __init__(
+        self,
+        parent: typing.Optional[QWidget] = None,
+    ) -> None:
+        super().__init__(parent)
+        ...
+
     def initialize_components(self) -> None:
         raise NotImplementedError(
             "Please, redefine this function, and call it in the init"
@@ -43,15 +54,6 @@ class BindableObject:
         raise NotImplementedError(
             "Please, redefine this function, and call it in the init"
         )
-
-
-class QtBindableObject(BindableObject, QObject):
-    def __init__(
-        self,
-        parent: typing.Optional[QWidget] = None,
-    ) -> None:
-        super().__init__(parent)
-        ...
 
     def binding_state(
         self,

@@ -3,7 +3,7 @@ import sys
 
 import context
 from qtmvvmtoolkit.inputs import ObservableProperty
-from qtmvvmtoolkit.objects import QtBindableObject
+from qtmvvmtoolkit.objects import BindableObject
 
 context.__file__
 from PyQt6.QtWidgets import (
@@ -25,7 +25,7 @@ class ViewModel:
         self.is_visible = ObservableProperty[bool](True)
 
 
-class Widget(QWidget, QtBindableObject):
+class Widget(QWidget, BindableObject):
     def __init__(self, vm: ViewModel, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._vm = vm

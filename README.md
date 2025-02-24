@@ -25,6 +25,7 @@ pip install git+https://github.com/kvruntime/qtmvvmtoolkit.git@branch-or-tag-nam
 
 
 
+
 ```
 
 ## Getting Started
@@ -38,6 +39,7 @@ import sys
 from PyQt6.QtWidgets import *
 from qtmvvmtoolkit.inputs import ObservableProperty
 from qtmvvmtoolkit.objects import BindableObject
+
 
 
 
@@ -55,6 +57,7 @@ class SimpleDataBindingViewModel:
         self.age = ObservableProperty[int](0)
         self.confirm = ObservableProperty[bool](False)
         return
+
 
 
 
@@ -116,6 +119,7 @@ class SimpleDataBindingWidget(QWidget, BindableObject):
 
 
 
+
 ```
 
 Run the app:
@@ -126,6 +130,7 @@ w = SimpleDataBindingWidget(SimpleDataBindingViewModel())
 w.show()
 w.setFocus()
 app.exec()
+
 
 
 

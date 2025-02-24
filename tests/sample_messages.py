@@ -8,7 +8,7 @@ from qtmvvmtoolkit.inputs import (
     ObservableProperty,
 )
 from qtmvvmtoolkit.messenger import Message, Messenger
-from qtmvvmtoolkit.objects import QtBindableObject
+from qtmvvmtoolkit.objects import BindableObject
 from qtpy.QtGui import *
 from qtpy.QtWidgets import *
 
@@ -63,7 +63,7 @@ class HomeViewModel:
         return None
 
 
-class HomePage(QWidget, QtBindableObject):
+class HomePage(QWidget, BindableObject):
     def __init__(self, vm: HomeViewModel) -> None:
         super().__init__()
         self.vm = vm
@@ -112,7 +112,7 @@ class HomePage(QWidget, QtBindableObject):
         return None
 
 
-class PageUser(QWidget, QtBindableObject):
+class PageUser(QWidget, BindableObject):
     def __init__(self, vm: UserViewModel) -> None:
         super().__init__(None)
         self.vm = vm
