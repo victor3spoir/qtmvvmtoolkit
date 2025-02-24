@@ -21,11 +21,7 @@
 You can install QtMvvmToolkit using pip:
 
 ```bash
-pip install git+https://github.com/kvruntime/qtmvvmtoolkit.git@branch-or-tag-name
-
-
-
-
+  pip install git+https://github.com/victor3spoir/qtmvvmtoolkit.git@branch-or-tag-name
 ```
 
 ## Getting Started
@@ -158,4 +154,4 @@ This project is licensed under the MIT License.
 
 ## Contact
 
-For questions or support, please reach out to <mailto:victorespoir.dev@gmail.com>.
+For questions or support, please reach out to <victorespoir.dev@gmail.com>.

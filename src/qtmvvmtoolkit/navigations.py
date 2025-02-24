@@ -15,11 +15,10 @@ class Navigator:
     def __init__(self) -> None:
         self._outlet: typing.Union[QTabWidget, QStackedWidget]
         self._routes: typing.Dict[str, QWidget] = {}
-        return
+        ...
 
     @classmethod
-    @property
-    def Current(cls):
+    def current(cls):
         try:
             return Navigator.__Default
         except AttributeError:
@@ -31,7 +30,7 @@ class Navigator:
         outlet: typing.Union[QStackedWidget, QTabWidget],
     ):
         self._outlet = outlet
-        return
+        return None
 
     def add_route(self, route: str, widget: QWidget) -> None:
         if isinstance(widget, (QTabWidget)):
@@ -39,7 +38,7 @@ class Navigator:
         if isinstance(widget, (QStackedWidget)):
             self.__register_for_stacked(widget)
         self._routes.update({route: widget})
-        return
+        return None
 
     def __register_for_tab(self, route: str, widget: QWidget) -> None:
         self._outlet.addTab(widget, route)

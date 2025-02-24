@@ -205,20 +205,27 @@ class BindableObject(QObject):
         converter: IValueConverter[T, str] | None = None,
     ) -> None:
         def _update_widget(value: T):
-            widget.setText(str(value))
+            if converter:
+                widget.setText(converter.convert(value))
+            else:
+                widget.setText(str(value))
             return None
 
         def _update_observable(value: typing.Any):
             _type: typing.Type = observable.__orig_class__.__args__[0]
             try:
-                if _type in [int, float]:
+                if converter:
+                    observable.set(converter.back_convert(value))
+                elif _type in [int, float]:
                     value = _type(eval(widget.text()))
+                    observable.set(value)
                 elif _type in [str]:
                     value = _type(widget.text())
-                else:
-                    value = ""
-                observable.set(value)
+                    observable.set(value)
                 return None
+                # else:
+                #     pass
+                # observable.set(value)
 
             except NameError:
                 widget.clear()
@@ -226,10 +233,14 @@ class BindableObject(QObject):
                 widget.clear()
             return None
 
+        def _update_observable_on_typed():
+            _update_observable(widget.text())
+            return None
+
         if bindings == "on-typing":
             widget.textChanged.connect(_update_observable)
         if bindings == "on-typed":
-            widget.textChanged.connect(_update_observable)
+            widget.editingFinished.connect(_update_observable_on_typed)
 
         observable.valueChanged += _update_widget
         observable.valueChanged(observable.get())
